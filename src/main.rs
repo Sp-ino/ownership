@@ -114,7 +114,6 @@ fn main() {
         let new_s = String::from("hello ");
         let new_s = take_and_return_ownership_with_mut(new_s);
         println!("This is the value of new_s: {new_s}");
-
     }
     // --------------------------------------------------------------------------
 
@@ -139,8 +138,66 @@ fn main() {
         // a mutable reference:
         // 
         // append_with_borrowing(&mut mystr); //compile error!
-    // --------------------------------------------------------------------------
     }
+    // --------------------------------------------------------------------------
+
+    // ------------------------Experiments with slices---------------------------
+    {
+        println!("\n\nSCOPE 5");
+
+        let mut s = String::from("Hello world!");
+
+        let word = first_word(&s);
+
+        // Trying to modify s after calling first_word
+        // would cause a compile error. This
+        // 
+        // s.clear();
+        // 
+        // or this
+        // 
+        // s.push_str(" I'm here.");
+        // 
+        // Would both cause a compile error
+
+        // The following linea causes an error too
+        // 
+        // s = String::from("Bella zi");
+        // 
+        // Because I cannot perform assignment to a borrowed variable
+
+        // However, there is no problem is I shadow said variable
+        let s = String::from("Ciao ciao");
+        println!("{s}");
+
+        println!("First word: {word}");
+        // Notice how word, that is a reference to the content of
+        // the string "Hello world!" continues to be valid even though
+        // s, which was originally bound to "Hello world!," has been shadowed.
+        // This is because shadowing does not destroy the original value.
+        // In fact, the Rust Book states:
+        // "Note that shadowing a name does not alter or destroy the value it was
+        // bound to, and the value will continue to exist until it goes out of
+        // scope, even if it is no longer accessible by any means."
+        // 
+        // The last statement is a bit imprecise, because the value
+        // that a shadowed variable originally was bound to can still
+        // be accessed if a reference is created before shadowing
+        
+        let myvariable = String::from("Sono Valerio");
+        println!("\nmyvariable is initially bound to {myvariable}");
+
+        // create reference
+        let myref = &myvariable;
+        println!("\nmyref points to {myvariable} before myvariable is shadowed");
+
+        // shadow myvariable
+        let myvariable = 3;
+
+        println!("\nAfter being shadowed myvariable is {}
+but myref still points to {}\n", myvariable, myref);
+    }
+    // --------------------------------------------------------------------------
 }
 
 
@@ -155,7 +212,7 @@ fn print_incremented_int(arg: i32) {
 
 fn print_len_with_ownership(arg: String) {
     // when this function is called the variable that is passed to it
-    // is *moved* into the scope of the function and becomes invalid in the scope
+    // is *moved* into its scope and becomes invalid in the scope
     // from which it has been passed. This means that the triplet
     // (address, len, capacity) in the stack is moved from the scope
     // of the caller to the scope of the callee, while the heap region in which the
@@ -168,12 +225,11 @@ fn print_len_with_ownership(arg: String) {
 
 fn take_and_return_ownership_with_mut(mut arg: String) -> String{
     // when this function is called the variable that is passed to it
-    // is *moved* into the scope of the function and becomes invalid in the scope
-    // from which it has been passed. This means that the triplet
-    // (address, len, capacity) in the stack is moved from the scope
-    // of the caller to the scope of the callee, while the heap region in which the
-    // actual string is stored remains unchanged when the ownership of the
-    // variable changes
+    // is *moved* into its scope. At the same time, the variable
+    // becomes mutable because of the mut before the argument name.
+    // Note that the variable that is passed CAN BE AN IMMUTABLE VARIABLE.
+    // It will simply become mutable when it is moved into the scope
+    // of this function.
     let mut len = arg.len();
     println!("take_and_return_ownership_with_mut:length of string {}: {}", arg, len);
 
@@ -196,4 +252,17 @@ fn print_len_with_borrowing(s: &String) {
 
 fn append_with_borrowing(s: &mut String) {
     s.push_str(" fra!");
+}
+
+
+fn first_word(s: &String) -> &str {
+    let bytes = s.as_bytes();
+
+    for (i, &byte) in bytes.iter().enumerate() {
+        if byte == b' ' {
+            return &s[0..i];
+        }
+    }
+
+    s
 }
